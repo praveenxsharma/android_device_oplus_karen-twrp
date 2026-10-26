@@ -1,0 +1,35 @@
+From 251e4cb57912c0d2dd7b5f5e54cb2bc79f6a4d2f Mon Sep 17 00:00:00 2001
+From: praveenxsharma <itachisec@duck.com>
+Date: Mon, 26 Oct 2026 17:49:37 +0000
+Subject: [PATCH] minuitwrp: Default to a single layer mixer
+
+MTK topology parsing knows only the A11-era topology names; on the
+OOS13 (4.19) kernels the mode_properties blob does not match and the
+fallback of 2 LMs splits the framebuffer across two half-width
+planes. On single-LCM devices (karen: one panel, one DSI link) this
+renders the UI through a half-width path - complete UI squeezed into
+a narrow strip. Default to 1 LM; dual-LM devices parse their topology
+explicitly anyway.
+
+Verified on karen (OnePlus Nord 2T, OOS13 kernel): TWRP renders the
+full 1080x2400 UI correctly with 1 LM.
+---
+ minuitwrp/graphics_drm.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/minuitwrp/graphics_drm.cpp b/minuitwrp/graphics_drm.cpp
+index 99ebd28..5eb7bbf 100644
+--- a/minuitwrp/graphics_drm.cpp
++++ b/minuitwrp/graphics_drm.cpp
+@@ -71,7 +71,7 @@ struct drm_surface {
+ 
+ #define NUM_MAIN 1
+ #define NUM_PLANES 4
+-#define DEFAULT_NUM_LMS 2
++#define DEFAULT_NUM_LMS 1
+ 
+ struct Crtc {
+   drmModeObjectProperties *props;
+-- 
+2.43.0
+

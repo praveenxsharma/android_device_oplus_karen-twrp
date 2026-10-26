@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased - android-13 (2)
+
+- Fix the half-screen rendering on the OOS13 kernel: TWRP's MTK
+  topology parser falls back to 2 layer mixers when it cannot parse
+  the kernel's mode_properties blob, splitting the framebuffer into
+  half-width planes (complete UI squeezed into a narrow strip).
+  patches/0001-minuitwrp-single-lm.patch defaults to a single LM.
+  Run device/oneplus/karen/patches/apply.sh from the build root
+  before building.
+
 ## Unreleased - android-13
 
 - Rebase on the android-13 (TWRP 3.7.x twrp-13) base: the device now runs
