@@ -151,7 +151,11 @@ TW_BRIGHTNESS_PATH := "/sys/class/leds/lcd-backlight/brightness"
 TW_CUSTOM_CPU_TEMP_PATH := "/sys/class/thermal/thermal_zone5/temp"
 TW_MAX_BRIGHTNESS := 2047
 TW_DEFAULT_BRIGHTNESS := 1200
-TW_SCREEN_BLANK_ON_BOOT := true
+# TW_SCREEN_BLANK_ON_BOOT disabled: on the OOS13 (4.19) kernel the
+# DRM blank/re-init path brings the panel back with a wrong stride -
+# TWRP UI appears as a rotated strip on half the screen. TWRP already
+# owns the boot splash handoff; do not re-init the panel.
+# TW_SCREEN_BLANK_ON_BOOT := true
 TARGET_USES_MKE2FS := true
 # TW_EXCLUDE_ENCRYPTED_BACKUPS := false
 TW_EXCLUDE_APEX := false
