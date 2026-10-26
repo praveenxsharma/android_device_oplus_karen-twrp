@@ -1,0 +1,54 @@
+From 8a44c01ca55965925bfdfb5158bc2253f431c03d Mon Sep 17 00:00:00 2001
+From: praveenxsharma <itachisec@duck.com>
+Date: Mon, 26 Oct 2026 18:12:08 +0000
+Subject: [PATCH] minuitwrp: Reuse the active CRTC mode instead of the
+ preferred one
+
+On multi-mode panels (60/90 Hz with per-mode DSC parameters), the
+bootloader initializes the panel with one mode and hands scanout to
+the kernel. Committing a different mode than the one the panel/DSI
+link was initialized with breaks the panel's DSC decode: the UI
+renders squeezed into a narrow strip (observed on karen / OnePlus
+Nord 2T, OOS13 kernel, samsung AMS643x panel with DSC single port).
+
+Match the bootloader's active CRTC mode against the connector modes
+and reuse it; fall back to the preferred-mode behavior when the CRTC
+is not scanning out.
+---
+ minuitwrp/graphics_drm.cpp | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/minuitwrp/graphics_drm.cpp b/minuitwrp/graphics_drm.cpp
+index 5eb7bbf..aaf0b61 100644
+--- a/minuitwrp/graphics_drm.cpp
++++ b/minuitwrp/graphics_drm.cpp
+@@ -764,6 +764,26 @@ static GRSurface* drm_init(minui_backend* backend __unused) {
+ 
+   disable_non_main_crtcs(drm_fd, res, main_monitor_crtc);
+ 
++  /* Prefer the mode the CRTC is already scanning out (set by the
++   * bootloader splash). Multi-mode panels (60/90 Hz) carry per-mode
++   * DSC parameters; committing a mode different from the one the
++   * panel was initialized with breaks the DSC decode and the UI
++   * renders squeezed into a strip. */
++  if (main_monitor_crtc->mode.clock != 0) {
++    for (uint32_t m = 0; m < main_monitor_connector->count_modes; m++) {
++      drmModeModeInfo *cur = &main_monitor_crtc->mode;
++      drmModeModeInfo *cand = &main_monitor_connector->modes[m];
++      if (cur->clock == cand->clock && cur->hdisplay == cand->hdisplay &&
++          cur->vdisplay == cand->vdisplay && cur->vrefresh == cand->vrefresh) {
++        if (m != selected_mode)
++          printf("using active crtc mode %u instead of preferred %u\n",
++                 m, selected_mode);
++        selected_mode = m;
++        break;
++      }
++    }
++  }
++
+   main_monitor_crtc->mode = main_monitor_connector->modes[selected_mode];
+ 
+   int width = main_monitor_crtc->mode.hdisplay;
+-- 
+2.43.0
+
