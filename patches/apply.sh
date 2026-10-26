@@ -4,16 +4,16 @@
 #   device/oneplus/karen/patches/apply.sh
 set -e
 ROOT=$(pwd)
-if [ ! -f "$ROOT/bootable/recovery/minuitwrp/graphics_drm.cpp" ]; then
-    echo "ERROR: run from the build root (the directory containing bootable/)" >&2
-    exit 1
-fi
-if grep -q "DEFAULT_NUM_LMS 1" "$ROOT/bootable/recovery/minuitwrp/graphics_drm.cpp"; then
-    echo "patch already applied"
-    exit 0
-fi
-git -C "$ROOT/bootable/recovery" apply --check "$ROOT/device/oneplus/karen/patches/0001-minuitwrp-single-lm.patch" \
-  || git -C "$ROOT" apply --check "$ROOT/device/oneplus/karen/patches/0001-minuitwrp-single-lm.patch"
-git -C "$ROOT/bootable/recovery" apply "$ROOT/device/oneplus/karen/patches/0001-minuitwrp-single-lm.patch" 2>/dev/null \
-  || git -C "$ROOT" apply "$ROOT/device/oneplus/karen/patches/0001-minuitwrp-single-lm.patch"
-echo "applied: minuitwrp DEFAULT_NUM_LMS 2 -> 1 (single layer mixer for karen)"
+GR="$ROOT/bootable/recovery"
+[ -f "$GR/minuitwrp/graphics_drm.cpp" ] || { echo "ERROR: run from the build root (the directory containing bootable/)" >&2; exit 1; }
+for p in "$ROOT"/device/oneplus/karen/patches/0*.patch; do
+  if git -C "$GR" apply --check "$p" 2>/dev/null; then
+    git -C "$GR" apply "$p"
+    echo "applied: $(basename "$p")"
+  elif git -C "$ROOT" apply --check "$p" 2>/dev/null; then
+    git -C "$ROOT" apply "$p"
+    echo "applied at root: $(basename "$p")"
+  else
+    echo "already applied or not applicable: $(basename "$p")"
+  fi
+done
