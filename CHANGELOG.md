@@ -24,8 +24,14 @@
   - Power button / Decryption status:
     * Power button: `mtk-kpd` registers KEY_POWER (116), but hardware interrupts in recovery
       remain unresolved.
-    * Decryption: FBE metadata encryption decryption fails due to `vendor.oplus.hardware.cryptoeng@1.0-service`
-      exiting on boot.
+    * Decryption: RESOLVED. FBE metadata encryption decryption now successfully decrypts
+      and mounts `/data` (F2FS on `/dev/block/dm-27`). Root causes:
+      1) Trustonic TEE Keymaster rejected keyblob upgrade with `ErrorCode(-38)`
+         due to version mismatch (`os_version = 120000, patchlevel = 209912` vs stock
+         OOS 13 `os_version = 130000, patchlevel = 202303`). Fixed in `BoardConfig.mk`.
+      2) Missing vendor libraries `libSoterProvision.so` and `soter_attk_provision.so`
+         caused `vendor.oplus.hardware.cryptoeng@1.0-service` to crash-loop. Fixed by
+         adding prebuilt libs to `recovery/root/vendor/lib64/`.
 
 
 ## Unreleased - android-13
