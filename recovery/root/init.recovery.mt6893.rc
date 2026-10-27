@@ -57,6 +57,9 @@ service keymaster_attestation-1-1 /system/bin/vendor.mediatek.hardware.keymaster
     seclabel u:r:recovery:s0
 
 on property:hwservicemanager.ready=true
+    exec u:r:recovery:s0 -- /system/bin/resetprop ro.build.version.release 13
+    exec u:r:recovery:s0 -- /system/bin/resetprop ro.build.version.security_patch 2023-03-05
+    exec u:r:recovery:s0 -- /system/bin/resetprop ro.vendor.build.security_patch 2023-03-05
     start keystore2
     start hal_cryptoeng_oplus
     start mobicore
